@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 import shutil
 import webbrowser
 import subprocess
@@ -11,6 +12,17 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+try:
+    from PyQt6.QtWidgets import QApplication as _QApp
+except ImportError:
+    try:
+        from PyQt5.QtWidgets import QApplication as _QApp
+    except ImportError:
+        _QApp = None
+if _QApp is not None:
+    _qt_app = _QApp.instance() or _QApp(sys.argv)
+    _qt_app.setApplicationName('pychemy')
 
 import webview
 
@@ -142,7 +154,7 @@ def parse_args():
     p.add_argument('--query',          metavar='Q',    help='Default search query')
     p.add_argument('--categories',     metavar='MASK', help='Category bitmask (e.g. 111)')
     p.add_argument('--purity',         metavar='MASK', help='Purity bitmask (e.g. 100)')
-    p.add_argument('--thumb-size',     dest='thumb-size',     metavar='SIZE', choices=['sm', 'm', 'l', 'xl'], help='Thumbnail size')
+    p.add_argument('--thumb-size',     dest='thumb-size',     metavar='SIZE', choices=['xs', 'sm', 'm', 'l', 'xl'], help='Thumbnail size')
     p.add_argument('--min-resolution', dest='min-resolution', metavar='RES',  help='Minimum resolution (e.g. 1920x1080)')
     p.add_argument('--script',         metavar='PATH', help='Script to run on selected wallpaper')
     p.add_argument('--close-on-select', dest='close-on-select', action='store_true', default=None, help='Close after selecting wallpaper')
@@ -157,6 +169,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    sys.argv[0] = 'pychemy'
     config = {**load_config(), **parse_args()}
     api = WallhavenAPI(config)
     ui_html = str(Path(__file__).parent / 'ui.html')

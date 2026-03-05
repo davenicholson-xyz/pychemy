@@ -146,6 +146,132 @@
     outline: none;
   }
 
+  /* Lightbox */
+  #lightbox-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.94);
+    z-index: 2500;
+    flex-direction: row;
+  }
+  #lightbox-modal.visible { display: flex; }
+  #lightbox-image-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-width: 0;
+    cursor: zoom-out;
+  }
+  #lightbox-img {
+    max-width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
+    border-radius: 4px;
+    display: block;
+  }
+  #lightbox-info {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: none;
+  }
+  #lightbox-info::-webkit-scrollbar { display: none; }
+  .lb-resolution {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .lb-ratio {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .lb-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .lb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .lb-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .lb-chip.accent { color: var(--accent); border-color: var(--accent); }
+  .lb-stats {
+    display: flex;
+    gap: 16px;
+  }
+  .lb-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .lb-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .lb-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .lb-colors {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .lb-color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .lb-divider {
+    height: 1px;
+    background: var(--border);
+  }
+  .lb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .lb-tag {
+    background: var(--surface2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .lb-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .lb-meta-row span:last-child { color: var(--text); }
+
   /* Help overlay */
   #help-modal {
     display: none;
@@ -260,6 +386,13 @@
   <input id="search-input" type="text" placeholder="Search…" autocomplete="off" spellcheck="false" />
 </div>
 
+<div id="lightbox-modal">
+  <div id="lightbox-image-area">
+    <img id="lightbox-img" src="" alt="" />
+  </div>
+  <div id="lightbox-info"></div>
+</div>
+
 <div id="help-modal">
   <div id="help-box">
     <div class="help-heading">Keybindings</div>
@@ -283,6 +416,7 @@
       <div>
         <div class="help-section-label">Actions</div>
         <div class="help-row"><span class="help-keys"><kbd>Enter</kbd></span>Run script</div>
+        <div class="help-row"><span class="help-keys"><kbd>p</kbd></span>Preview (lightbox)</div>
         <div class="help-row"><span class="help-keys"><kbd>o</kbd></span>Open in browser</div>
         <div class="help-row"><span class="help-keys"><kbd>Esc</kbd></span>Quit</div>
       </div>
@@ -591,6 +725,92 @@
   }
 
   // ── Help overlay ─────────────────────────────────────────────────────────
+  function fmtBytes(b) {
+    if (!b) return '?';
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+    return (b / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+  function fmtNum(n) {
+    if (!n && n !== 0) return '?';
+    return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+  }
+
+  function openLightbox(wp) {
+    const img = document.getElementById('lightbox-img');
+    img.onerror = null;
+    img.src = wp.path || '';
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = wp.thumbs?.large || wp.thumbs?.original || '';
+    };
+
+    const info = document.getElementById('lightbox-info');
+    const res = wp.resolution || (wp.dimension_x && wp.dimension_y ? `${wp.dimension_x}x${wp.dimension_y}` : '');
+    const ext = (wp.file_type || '').replace('image/', '').toUpperCase();
+    const date = wp.created_at ? wp.created_at.slice(0, 10) : '';
+    const tags = Array.isArray(wp.tags) ? wp.tags : [];
+    const colors = Array.isArray(wp.colors) ? wp.colors : [];
+
+    info.innerHTML = `
+      <div>
+        <div class="lb-resolution">${res || '—'}</div>
+        <div class="lb-ratio">${wp.ratio || ''}</div>
+      </div>
+      <div class="lb-divider"></div>
+      <div>
+        <div class="lb-section-label">Details</div>
+        <div class="lb-chips">
+          ${wp.category ? `<span class="lb-chip accent">${wp.category}</span>` : ''}
+          ${wp.purity   ? `<span class="lb-chip">${wp.purity}</span>` : ''}
+          ${ext         ? `<span class="lb-chip">${ext}</span>` : ''}
+          ${wp.file_size ? `<span class="lb-chip">${fmtBytes(wp.file_size)}</span>` : ''}
+        </div>
+      </div>
+      <div>
+        <div class="lb-section-label">Stats</div>
+        <div class="lb-stats">
+          <div class="lb-stat">
+            <span class="lb-stat-value">${fmtNum(wp.views)}</span>
+            <span class="lb-stat-label">views</span>
+          </div>
+          <div class="lb-stat">
+            <span class="lb-stat-value">${fmtNum(wp.favorites)}</span>
+            <span class="lb-stat-label">favorites</span>
+          </div>
+        </div>
+      </div>
+      ${colors.length ? `
+      <div>
+        <div class="lb-section-label">Colors</div>
+        <div class="lb-colors">
+          ${colors.map(c => `<div class="lb-color-swatch" style="background:${c}" title="${c}"></div>`).join('')}
+        </div>
+      </div>` : ''}
+      ${tags.length ? `
+      <div class="lb-divider"></div>
+      <div>
+        <div class="lb-section-label">Tags</div>
+        <div class="lb-tags">
+          ${tags.map(t => `<span class="lb-tag">${t.name}</span>`).join('')}
+        </div>
+      </div>` : ''}
+      ${(wp.uploader?.username || date) ? `
+      <div class="lb-divider"></div>
+      <div>
+        ${wp.uploader?.username ? `<div class="lb-meta-row"><span>uploader</span><span>${wp.uploader.username}</span></div>` : ''}
+        ${date ? `<div class="lb-meta-row"><span>added</span><span>${date}</span></div>` : ''}
+      </div>` : ''}
+    `;
+
+    document.getElementById('lightbox-modal').classList.add('visible');
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox-modal').classList.remove('visible');
+    document.getElementById('lightbox-img').src = '';
+  }
+  document.getElementById('lightbox-image-area').addEventListener('click', closeLightbox);
+
   function openHelp()  { document.getElementById('help-modal').classList.add('visible'); }
   function closeHelp() { document.getElementById('help-modal').classList.remove('visible'); }
   document.getElementById('help-modal').addEventListener('click', e => {
@@ -599,6 +819,12 @@
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
+    const lightboxOpen = document.getElementById('lightbox-modal').classList.contains('visible');
+    if (lightboxOpen) {
+      if (e.key === 'Escape' || e.key === 'p') closeLightbox();
+      return;
+    }
+
     const helpOpen = document.getElementById('help-modal').classList.contains('visible');
     if (helpOpen) {
       if (e.key === 'Escape' || e.key === '?') closeHelp();
@@ -652,6 +878,10 @@
       e.preventDefault();
       const url = wallpapers[selectedIndex]?.path;
       if (url) window.pywebview.api.run_script(url);
+    } else if (e.key === 'p' && selectedIndex >= 0) {
+      e.preventDefault();
+      const wp = wallpapers[selectedIndex];
+      if (wp?.path) openLightbox(wp);
     } else if (e.key === 'o' && selectedIndex >= 0) {
       e.preventDefault();
       const id = wallpapers[selectedIndex]?.id;
@@ -672,7 +902,7 @@
     }
     if (currentSorting === 'random') currentSeed = Math.random().toString(36).slice(2, 8);
     updateStatus();
-    const thumbPx = { sm: '160px', m: '240px', l: '320px', xl: '440px' };
+    const thumbPx = { xs: '100px', sm: '160px', m: '240px', l: '320px', xl: '440px' };
     document.documentElement.style.setProperty('--thumb-size', thumbPx[cfg['thumb-size']] || '240px');
     if (cfg.collection && cfg.username) {
       const result = await window.pywebview.api.get_collections(cfg.username, cfg.api_key || '');
