@@ -5,7 +5,6 @@ import sys
 import shutil
 import webbrowser
 import subprocess
-import tempfile
 import threading
 import tomllib
 import urllib.error
@@ -72,26 +71,22 @@ class WallhavenAPI:
         threading.Thread(target=self._download_and_run, args=(script, url), daemon=True).start()
 
     def _download_and_run(self, script, url):
-        ext = Path(urllib.parse.urlparse(url).path).suffix or '.jpg'
-        tmp_path = None
+        parsed = urllib.parse.urlparse(url)
+        filename = Path(parsed.path).name or 'wallpaper.jpg'
+        cache_dir = Path.home() / '.cache' / 'pychemy'
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        dest = cache_dir / filename
         try:
             req = urllib.request.Request(url)
             req.add_header('User-Agent', 'Pychemy/1.0')
             with urllib.request.urlopen(req, timeout=30) as resp:
-                with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as f:
+                with open(dest, 'wb') as f:
                     shutil.copyfileobj(resp, f)
-                    tmp_path = f.name
-            subprocess.run([script, tmp_path])
+            subprocess.run([script, str(dest)])
             if self.config.get('close-on-select'):
                 webview.windows[0].destroy()
         except Exception as e:
             print(f'run_script error: {e}')
-        finally:
-            if tmp_path:
-                try:
-                    os.unlink(tmp_path)
-                except OSError:
-                    pass
 
     def _fetch(self, url, api_key):
         req = urllib.request.Request(url)
