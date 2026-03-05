@@ -139,7 +139,8 @@ def parse_args():
     sort_group.add_argument('--latest', dest='sorting', action='store_const', const='date_added', help='Start on Latest sorting')
     sort_group.add_argument('--top',    dest='sorting', action='store_const', const='toplist',    help='Start on Toplist sorting')
     sort_group.add_argument('--random', dest='sorting', action='store_const', const='random',     help='Start on Random sorting')
-    p.add_argument('--search', dest='query', metavar='QUERY', help='Start with this search query')
+    p.add_argument('--search',     dest='query',      metavar='QUERY', help='Start with this search query')
+    p.add_argument('--collection', dest='collection', metavar='NAME',  help='Start with this collection open')
     return {k: v for k, v in vars(p.parse_args()).items() if v is not None}
 
 

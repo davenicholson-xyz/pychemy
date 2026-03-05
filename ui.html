@@ -259,8 +259,10 @@
       </div>
       <div>
         <div class="help-section-label">Navigation</div>
-        <div class="help-row"><span class="help-keys"><kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd></span>Move</div>
-        <div class="help-row"><span class="help-keys"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span>Move</div>
+        <div class="help-row"><span class="help-keys"><kbd>←</kbd><kbd>h</kbd></span>Left</div>
+        <div class="help-row"><span class="help-keys"><kbd>→</kbd><kbd>l</kbd></span>Right</div>
+        <div class="help-row"><span class="help-keys"><kbd>↑</kbd><kbd>k</kbd></span>Up</div>
+        <div class="help-row"><span class="help-keys"><kbd>↓</kbd><kbd>j</kbd></span>Down</div>
       </div>
       <div>
         <div class="help-section-label">Actions</div>
@@ -608,6 +610,11 @@
     if (currentSorting === 'random') currentSeed = Math.random().toString(36).slice(2, 8);
     const thumbPx = { sm: '160px', m: '240px', l: '320px', xl: '440px' };
     document.documentElement.style.setProperty('--thumb-size', thumbPx[cfg['thumb-size']] || '240px');
+    if (cfg.collection && cfg.username) {
+      const result = await window.pywebview.api.get_collections(cfg.username, cfg.api_key || '');
+      const coll = result.success && result.data.find(c => c.label.toLowerCase() === cfg.collection.toLowerCase());
+      if (coll) { await loadCollection(coll); return; }
+    }
     showSkeletons();
     await loadNextPage();
   });
