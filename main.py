@@ -1,6 +1,8 @@
 import argparse
 import json
 import os
+import shutil
+import webbrowser
 import subprocess
 import tempfile
 import threading
@@ -45,8 +47,11 @@ class WallhavenAPI:
     def get_config(self):
         return self.config
 
+    def open_browser(self, url):
+        webbrowser.open(url)
+
     def close(self):
-        os._exit(0)
+        webview.windows[0].destroy()
 
     def run_script(self, url):
         script = self.config.get('script', '')
@@ -56,18 +61,25 @@ class WallhavenAPI:
 
     def _download_and_run(self, script, url):
         ext = Path(urllib.parse.urlparse(url).path).suffix or '.jpg'
+        tmp_path = None
         try:
             req = urllib.request.Request(url)
             req.add_header('User-Agent', 'Pychemy/1.0')
             with urllib.request.urlopen(req, timeout=30) as resp:
                 with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as f:
-                    f.write(resp.read())
+                    shutil.copyfileobj(resp, f)
                     tmp_path = f.name
-            subprocess.Popen([script, tmp_path])
+            subprocess.run([script, tmp_path])
             if self.config.get('close-on-select'):
-                os._exit(0)
+                webview.windows[0].destroy()
         except Exception as e:
             print(f'run_script error: {e}')
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
 
     def _fetch(self, url, api_key):
         req = urllib.request.Request(url)
