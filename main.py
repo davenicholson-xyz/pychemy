@@ -159,9 +159,10 @@ def parse_args():
 if __name__ == '__main__':
     config = {**load_config(), **parse_args()}
     api = WallhavenAPI(config)
+    ui_html = str(Path(__file__).parent / 'ui.html')
     window = webview.create_window(
         'Wallhaven Gallery',
-        'ui.html',
+        ui_html,
         js_api=api,
         width=1400,
         height=900,
