@@ -134,6 +134,12 @@ def parse_args():
     p.add_argument('--min-resolution', dest='min-resolution', metavar='RES',  help='Minimum resolution (e.g. 1920x1080)')
     p.add_argument('--script',         metavar='PATH', help='Script to run on selected wallpaper')
     p.add_argument('--close-on-select', dest='close-on-select', action='store_true', default=None, help='Close after selecting wallpaper')
+    sort_group = p.add_mutually_exclusive_group()
+    sort_group.add_argument('--hot',    dest='sorting', action='store_const', const='hot',        help='Start on Hot sorting')
+    sort_group.add_argument('--latest', dest='sorting', action='store_const', const='date_added', help='Start on Latest sorting')
+    sort_group.add_argument('--top',    dest='sorting', action='store_const', const='toplist',    help='Start on Toplist sorting')
+    sort_group.add_argument('--random', dest='sorting', action='store_const', const='random',     help='Start on Random sorting')
+    p.add_argument('--search', dest='query', metavar='QUERY', help='Start with this search query')
     return {k: v for k, v in vars(p.parse_args()).items() if v is not None}
 
 
