@@ -169,3 +169,4 @@ if __name__ == '__main__':
         min_size=(800, 600),
     )
     webview.start()
+    os._exit(0)
