@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import subprocess
@@ -19,6 +20,9 @@ DEFAULTS = {
     'query': '',
     'categories': '111',
     'purity': '100',
+    'thumb-size': 'm',
+    'min-resolution': '',
+    'close-on-select': False,
 }
 
 
@@ -60,6 +64,8 @@ class WallhavenAPI:
                     f.write(resp.read())
                     tmp_path = f.name
             subprocess.Popen([script, tmp_path])
+            if self.config.get('close-on-select'):
+                os._exit(0)
         except Exception as e:
             print(f'run_script error: {e}')
 
@@ -92,7 +98,7 @@ class WallhavenAPI:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    def fetch_wallpapers(self, page, api_key, query, categories, purity, sorting='date_added', seed=''):
+    def fetch_wallpapers(self, page, api_key, query, categories, purity, sorting='date_added', seed='', atleast=''):
         params = {
             'sorting': sorting,
             'order': 'desc',
@@ -104,6 +110,8 @@ class WallhavenAPI:
             params['q'] = query
         if seed:
             params['seed'] = seed
+        if atleast:
+            params['atleast'] = atleast
 
         url = 'https://wallhaven.cc/api/v1/search?' + urllib.parse.urlencode(params)
 
@@ -115,8 +123,22 @@ class WallhavenAPI:
             return {'success': False, 'error': str(e)}
 
 
+def parse_args():
+    p = argparse.ArgumentParser(description='Pychemy — Wallhaven gallery browser')
+    p.add_argument('--api-key',        metavar='KEY',  help='Wallhaven API key')
+    p.add_argument('--username',       metavar='USER', help='Wallhaven username')
+    p.add_argument('--query',          metavar='Q',    help='Default search query')
+    p.add_argument('--categories',     metavar='MASK', help='Category bitmask (e.g. 111)')
+    p.add_argument('--purity',         metavar='MASK', help='Purity bitmask (e.g. 100)')
+    p.add_argument('--thumb-size',     dest='thumb-size',     metavar='SIZE', choices=['sm', 'm', 'l', 'xl'], help='Thumbnail size')
+    p.add_argument('--min-resolution', dest='min-resolution', metavar='RES',  help='Minimum resolution (e.g. 1920x1080)')
+    p.add_argument('--script',         metavar='PATH', help='Script to run on selected wallpaper')
+    p.add_argument('--close-on-select', dest='close-on-select', action='store_true', default=None, help='Close after selecting wallpaper')
+    return {k: v for k, v in vars(p.parse_args()).items() if v is not None}
+
+
 if __name__ == '__main__':
-    config = load_config()
+    config = {**load_config(), **parse_args()}
     api = WallhavenAPI(config)
     window = webview.create_window(
         'Wallhaven Gallery',

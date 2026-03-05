@@ -29,7 +29,7 @@
   /* Gallery */
   .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size, 240px), 1fr));
     gap: 8px;
     padding: 8px;
   }
@@ -213,6 +213,90 @@
     max-width: 90vw;
     outline: none;
   }
+
+  /* Help overlay */
+  #help-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+  }
+  #help-modal.visible { display: flex; }
+
+  #help-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px 16px;
+    min-width: 420px;
+    max-width: 90vw;
+  }
+
+  .help-heading {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .help-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px 24px;
+  }
+
+  .help-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 7px;
+  }
+
+  .help-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .help-keys {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+    min-width: 62px;
+  }
+
+  kbd {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid #444;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .help-footer {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .help-footer kbd { color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -226,6 +310,34 @@
 
 <div id="search-modal">
   <input id="search-input" type="text" placeholder="Search…" autocomplete="off" spellcheck="false" />
+</div>
+
+<div id="help-modal">
+  <div id="help-box">
+    <div class="help-heading">Keybindings</div>
+    <div class="help-grid">
+      <div>
+        <div class="help-section-label">Sorting</div>
+        <div class="help-row"><span class="help-keys"><kbd>H</kbd></span>Hot</div>
+        <div class="help-row"><span class="help-keys"><kbd>T</kbd></span>Toplist</div>
+        <div class="help-row"><span class="help-keys"><kbd>L</kbd></span>Latest</div>
+        <div class="help-row"><span class="help-keys"><kbd>R</kbd></span>Random (re-roll)</div>
+        <div class="help-row"><span class="help-keys"><kbd>S</kbd></span>Search</div>
+        <div class="help-row"><span class="help-keys"><kbd>C</kbd></span>Collections</div>
+      </div>
+      <div>
+        <div class="help-section-label">Navigation</div>
+        <div class="help-row"><span class="help-keys"><kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd></span>Move</div>
+        <div class="help-row"><span class="help-keys"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span>Move</div>
+      </div>
+      <div>
+        <div class="help-section-label">Actions</div>
+        <div class="help-row"><span class="help-keys"><kbd>Enter</kbd></span>Run script</div>
+        <div class="help-row"><span class="help-keys"><kbd>Esc</kbd></span>Quit</div>
+      </div>
+    </div>
+    <div class="help-footer">Press <kbd>?</kbd> or <kbd>Esc</kbd> to close</div>
+  </div>
 </div>
 
 <div id="lightbox">
@@ -355,6 +467,7 @@
             cfg.purity || '100',
             currentSorting,
             currentSeed,
+            cfg['min-resolution'] || '',
           );
     } catch (err) {
       console.error('fetch failed:', err);
@@ -479,7 +592,7 @@
 
   // ── Sorting ───────────────────────────────────────────────────────────────
   async function setSorting(sorting) {
-    if (sorting === currentSorting && currentPage > 0 && !collectionMode) return;
+    if (sorting === currentSorting && sorting !== 'random' && currentPage > 0 && !collectionMode) return;
     collectionMode = false;
     currentCollection = null;
     currentSorting = sorting;
@@ -532,8 +645,21 @@
 
   document.getElementById('lightbox-backdrop').addEventListener('click', closeLightbox);
 
+  // ── Help overlay ─────────────────────────────────────────────────────────
+  function openHelp()  { document.getElementById('help-modal').classList.add('visible'); }
+  function closeHelp() { document.getElementById('help-modal').classList.remove('visible'); }
+  document.getElementById('help-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeHelp();
+  });
+
   // ── Keyboard ──────────────────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
+    const helpOpen = document.getElementById('help-modal').classList.contains('visible');
+    if (helpOpen) {
+      if (e.key === 'Escape' || e.key === '?') closeHelp();
+      return;
+    }
+
     const collOpen = document.getElementById('collections-modal').classList.contains('visible');
 
     if (collOpen) {
@@ -565,6 +691,7 @@
       return;
     }
 
+    if (e.key === '?') { e.preventDefault(); openHelp(); return; }
     if (e.key === 'S') { e.preventDefault(); openSearch(); return; }
     if (e.key === 'C') { e.preventDefault(); openCollections(); return; }
     if (e.key === 'H') { setSorting('hot');        return; }
@@ -596,6 +723,8 @@
   window.addEventListener('pywebviewready', async () => {
     cfg = await window.pywebview.api.get_config();
     currentQuery = cfg.query || '';
+    const thumbPx = { sm: '160px', m: '240px', l: '320px', xl: '440px' };
+    document.documentElement.style.setProperty('--thumb-size', thumbPx[cfg['thumb-size']] || '240px');
     showSkeletons();
     await loadNextPage();
   });
