@@ -1,4 +1,5 @@
 .direnv/
 result
+__pycache__/
 CLAUDE.md
 
