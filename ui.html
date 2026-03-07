@@ -891,7 +891,7 @@
     }
 
     if (e.key === '?') { e.preventDefault(); openHelp(); return; }
-    if (e.key === 'S') { e.preventDefault(); openSearch(); return; }
+    if (e.key === 'S' || e.key === '/') { e.preventDefault(); openSearch(); return; }
     if (e.key === 'C') { e.preventDefault(); openCollections(); return; }
     if (e.key === 'H') { setSorting('hot');        return; }
     if (e.key === 'T') { setSorting('toplist');    return; }
