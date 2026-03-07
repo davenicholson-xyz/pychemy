@@ -1,5 +1,5 @@
 {
-  description = "Pychemy - Wallhaven Gallery desktop app";
+  description = "Pyvista - Wallhaven Gallery desktop app";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -11,27 +11,27 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         pythonEnv = pkgs.python3.withPackages (ps: [ ps.pywebview ]);
-        pychemy = pkgs.stdenv.mkDerivation {
-          pname = "pychemy";
+        pyvista = pkgs.stdenv.mkDerivation {
+          pname = "pyvista";
           version = "0.1.0";
           src = ./.;
           nativeBuildInputs = [ pkgs.makeWrapper ];
           dontBuild = true;
           installPhase = ''
-            mkdir -p $out/share/pychemy $out/bin
-            cp main.py ui.html $out/share/pychemy/
-            makeWrapper ${pythonEnv}/bin/python $out/bin/pychemy \
-              --add-flags "$out/share/pychemy/main.py" \
+            mkdir -p $out/share/pyvista $out/bin
+            cp main.py ui.html $out/share/pyvista/
+            makeWrapper ${pythonEnv}/bin/python $out/bin/pyvista \
+              --add-flags "$out/share/pyvista/main.py" \
               --set QTWEBENGINE_DISABLE_SANDBOX 1
           '';
         };
       in {
-        packages.default = pychemy;
-        apps.default = { type = "app"; program = "${pychemy}/bin/pychemy"; };
+        packages.default = pyvista;
+        apps.default = { type = "app"; program = "${pyvista}/bin/pyvista"; };
         devShells.default = pkgs.mkShell {
           packages = [ pythonEnv ];
           shellHook = ''
-            echo "Pychemy dev shell ready — run: python main.py"
+            echo "Pyvista dev shell ready — run: python main.py"
             export QTWEBENGINE_DISABLE_SANDBOX=1
           '';
         };

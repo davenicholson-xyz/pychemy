@@ -21,11 +21,11 @@ except ImportError:
         _QApp = None
 if _QApp is not None:
     _qt_app = _QApp.instance() or _QApp(sys.argv)
-    _qt_app.setApplicationName('pychemy')
+    _qt_app.setApplicationName('pyvista')
 
 import webview
 
-CONFIG_PATH = Path.home() / '.config' / 'pychemy' / 'config.toml'
+CONFIG_PATH = Path.home() / '.config' / 'pyvista' / 'config.toml'
 
 DEFAULTS = {
     'api_key': '',
@@ -72,12 +72,12 @@ class WallhavenAPI:
     def _download_and_run(self, script, url):
         parsed = urllib.parse.urlparse(url)
         filename = Path(parsed.path).name or 'wallpaper.jpg'
-        cache_dir = Path.home() / '.cache' / 'pychemy'
+        cache_dir = Path.home() / '.cache' / 'pyvista'
         cache_dir.mkdir(parents=True, exist_ok=True)
         dest = cache_dir / filename
         try:
             req = urllib.request.Request(url)
-            req.add_header('User-Agent', 'Pychemy/1.0')
+            req.add_header('User-Agent', 'Pyvista/1.0')
             with urllib.request.urlopen(req, timeout=30) as resp:
                 with open(dest, 'wb') as f:
                     shutil.copyfileobj(resp, f)
@@ -91,7 +91,7 @@ class WallhavenAPI:
 
     def _fetch(self, url, api_key):
         req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'Pychemy/1.0 (Wallhaven Gallery Desktop App)')
+        req.add_header('User-Agent', 'Pyvista/1.0 (Wallhaven Gallery Desktop App)')
         if api_key:
             req.add_header('X-API-Key', api_key)
         with urllib.request.urlopen(req, timeout=15) as response:
@@ -101,7 +101,7 @@ class WallhavenAPI:
         import base64
         try:
             req = urllib.request.Request(url)
-            req.add_header('User-Agent', 'Pychemy/1.0')
+            req.add_header('User-Agent', 'Pyvista/1.0')
             if api_key:
                 req.add_header('X-API-Key', api_key)
             with urllib.request.urlopen(req, timeout=30) as resp:
@@ -167,7 +167,7 @@ class WallhavenAPI:
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description='Pychemy — Wallhaven gallery browser')
+    p = argparse.ArgumentParser(description='Pyvista — Wallhaven gallery browser')
     p.add_argument('--api-key',        metavar='KEY',  help='Wallhaven API key')
     p.add_argument('--username',       metavar='USER', help='Wallhaven username')
     p.add_argument('--query',          metavar='Q',    help='Default search query')
@@ -205,7 +205,7 @@ if __name__ == '__main__':
 
     sys.excepthook = _excepthook
 
-    sys.argv[0] = 'pychemy'
+    sys.argv[0] = 'pyvista'
     config = {**load_config(), **parse_args()}
     api = WallhavenAPI(config)
     ui_html = str(Path(__file__).parent / 'ui.html')
