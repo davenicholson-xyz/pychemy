@@ -753,6 +753,7 @@
       : '';
 
     const metaParts = [];
+    if (wp.id) metaParts.push(wp.id);
     if (wp.uploader?.username) metaParts.push(wp.uploader.username);
     if (date) metaParts.push(date);
 
@@ -777,9 +778,10 @@
     const img = document.getElementById('lightbox-img');
     img.onerror = null;
     img.src = wp.path || '';
-    img.onerror = () => {
+    img.onerror = async () => {
       img.onerror = null;
-      img.src = wp.thumbs?.large || wp.thumbs?.original || '';
+      const result = await window.pywebview.api.fetch_image(wp.path, cfg.api_key || '');
+      img.src = result.success ? result.data_url : (wp.thumbs?.large || wp.thumbs?.original || '');
     };
 
     renderLightboxInfo(wp);

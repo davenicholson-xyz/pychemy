@@ -97,6 +97,20 @@ class WallhavenAPI:
         with urllib.request.urlopen(req, timeout=15) as response:
             return json.loads(response.read().decode('utf-8'))
 
+    def fetch_image(self, url, api_key):
+        import base64
+        try:
+            req = urllib.request.Request(url)
+            req.add_header('User-Agent', 'Pychemy/1.0')
+            if api_key:
+                req.add_header('X-API-Key', api_key)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                mime = resp.headers.get('Content-Type', 'image/jpeg').split(';')[0]
+                data = base64.b64encode(resp.read()).decode('ascii')
+            return {'success': True, 'data_url': f'data:{mime};base64,{data}'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
     def fetch_wallpaper(self, wallpaper_id, api_key):
         try:
             data = self._fetch(f'https://wallhaven.cc/api/v1/w/{wallpaper_id}', api_key)
