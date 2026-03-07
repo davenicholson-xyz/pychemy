@@ -47,7 +47,6 @@ def load_config():
             data = tomllib.load(f)
         return {**DEFAULTS, **data}
     except Exception as e:
-        print(f'Warning: could not read config ({CONFIG_PATH}): {e}')
         return DEFAULTS.copy()
 
 
@@ -83,10 +82,12 @@ class WallhavenAPI:
                 with open(dest, 'wb') as f:
                     shutil.copyfileobj(resp, f)
             subprocess.run([script, str(dest)])
+            if self.config.get('output'):
+                print(str(dest), flush=True)
             if self.config.get('close-on-select'):
                 webview.windows[0].destroy()
-        except Exception as e:
-            print(f'run_script error: {e}')
+        except Exception:
+            pass
 
     def _fetch(self, url, api_key):
         req = urllib.request.Request(url)
@@ -160,10 +161,27 @@ def parse_args():
     sort_group.add_argument('--random', dest='sorting', action='store_const', const='random',     help='Start on Random sorting')
     p.add_argument('--search',     dest='query',      metavar='QUERY', help='Start with this search query')
     p.add_argument('--collection', dest='collection', metavar='NAME',  help='Start with this collection open')
+    p.add_argument('--output', action='store_true', default=None, help='Print wallpaper filepath to stdout after setting')
     return {k: v for k, v in vars(p.parse_args()).items() if v is not None}
 
 
 if __name__ == '__main__':
+    # Redirect fd 2 (stderr) to /dev/null to suppress Qt/WebEngine noise.
+    # On an unhandled crash, restore it so the traceback is visible.
+    _real_stderr_fd = os.dup(2)
+    _devnull = os.open(os.devnull, os.O_WRONLY)
+    os.dup2(_devnull, 2)
+    os.close(_devnull)
+    _real_stderr = os.fdopen(_real_stderr_fd, 'w')
+
+    def _excepthook(exc_type, exc_value, exc_tb):
+        import traceback
+        os.dup2(_real_stderr.fileno(), 2)
+        sys.stderr = _real_stderr
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+
+    sys.excepthook = _excepthook
+
     sys.argv[0] = 'pychemy'
     config = {**load_config(), **parse_args()}
     api = WallhavenAPI(config)
