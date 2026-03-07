@@ -160,126 +160,115 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.94);
+    background: rgba(0,0,0,0.88);
     z-index: 2500;
-    flex-direction: row;
   }
-  #lightbox-modal.visible { display: flex; }
+  #lightbox-modal.visible { display: block; }
+
   #lightbox-image-area {
-    flex: 1;
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    min-width: 0;
     cursor: zoom-out;
   }
   #lightbox-img {
     max-width: 100%;
-    max-height: 100vh;
+    max-height: 100%;
     object-fit: contain;
-    border-radius: 4px;
     display: block;
   }
+
   #lightbox-info {
-    width: 260px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border-left: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 20px 16px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%);
+    padding: 72px 28px 22px;
+    pointer-events: none;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    scrollbar-width: none;
+    gap: 7px;
   }
-  #lightbox-info::-webkit-scrollbar { display: none; }
+
+  .lb-top-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
   .lb-resolution {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 600;
-    color: var(--text);
+    color: #fff;
     letter-spacing: -0.5px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.9);
   }
   .lb-ratio {
     font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-left: 7px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
   }
-  .lb-section-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
-  .lb-chips {
+  .lb-stats {
     display: flex;
+    gap: 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  }
+  .lb-stat-val { color: #fff; font-weight: 500; }
+  .lb-chips-row {
+    display: flex;
+    align-items: center;
     flex-wrap: wrap;
     gap: 5px;
   }
   .lb-chip {
-    background: var(--surface2);
-    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
     border-radius: 4px;
-    padding: 3px 8px;
+    padding: 2px 7px;
     font-size: 11px;
-    color: var(--text-muted);
+    color: rgba(255,255,255,0.6);
+    backdrop-filter: blur(6px);
   }
-  .lb-chip.accent { color: var(--accent); border-color: var(--accent); }
-  .lb-stats {
-    display: flex;
-    gap: 16px;
-  }
-  .lb-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .lb-stat-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .lb-stat-label {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
+  .lb-chip.accent { color: var(--accent); border-color: var(--accent); background: rgba(124,106,247,0.15); }
   .lb-colors {
     display: flex;
-    gap: 5px;
+    gap: 4px;
+    margin-left: 4px;
     flex-wrap: wrap;
+    align-items: center;
   }
   .lb-color-swatch {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    border: 1px solid rgba(255,255,255,0.08);
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.15);
     flex-shrink: 0;
-  }
-  .lb-divider {
-    height: 1px;
-    background: var(--border);
   }
   .lb-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 4px;
   }
   .lb-tag {
-    background: var(--surface2);
+    background: rgba(255,255,255,0.08);
     border-radius: 3px;
-    padding: 2px 7px;
+    padding: 2px 6px;
     font-size: 11px;
-    color: var(--text-muted);
-    cursor: default;
+    color: rgba(255,255,255,0.48);
+    backdrop-filter: blur(6px);
   }
-  .lb-meta-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-muted);
+  .lb-meta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
   }
-  .lb-meta-row span:last-child { color: var(--text); }
 
   /* Help overlay */
   #help-modal {
@@ -745,7 +734,46 @@
     return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
   }
 
-  function openLightbox(wp) {
+  function renderLightboxInfo(wp) {
+    const res = wp.resolution || (wp.dimension_x && wp.dimension_y ? `${wp.dimension_x}x${wp.dimension_y}` : '');
+    const ext = (wp.file_type || '').replace('image/', '').toUpperCase();
+    const date = wp.created_at ? wp.created_at.slice(0, 10) : '';
+    const tags = Array.isArray(wp.tags) ? wp.tags : [];
+    const colors = Array.isArray(wp.colors) ? wp.colors : [];
+
+    const chips = [
+      wp.category  ? `<span class="lb-chip accent">${wp.category}</span>` : '',
+      wp.purity    ? `<span class="lb-chip">${wp.purity}</span>` : '',
+      ext          ? `<span class="lb-chip">${ext}</span>` : '',
+      wp.file_size ? `<span class="lb-chip">${fmtBytes(wp.file_size)}</span>` : '',
+    ].join('');
+
+    const swatches = colors.length
+      ? `<span class="lb-colors">${colors.map(c => `<span class="lb-color-swatch" style="background:${c}" title="${c}"></span>`).join('')}</span>`
+      : '';
+
+    const metaParts = [];
+    if (wp.uploader?.username) metaParts.push(wp.uploader.username);
+    if (date) metaParts.push(date);
+
+    document.getElementById('lightbox-info').innerHTML = `
+      <div class="lb-top-row">
+        <div>
+          <span class="lb-resolution">${res || '—'}</span>
+          ${wp.ratio ? `<span class="lb-ratio">${wp.ratio}</span>` : ''}
+        </div>
+        <div class="lb-stats">
+          ${wp.views    != null ? `<span><span class="lb-stat-val">${fmtNum(wp.views)}</span> views</span>` : ''}
+          ${wp.favorites != null ? `<span><span class="lb-stat-val">${fmtNum(wp.favorites)}</span> ♥</span>` : ''}
+        </div>
+      </div>
+      ${(chips || swatches) ? `<div class="lb-chips-row">${chips}${swatches}</div>` : ''}
+      ${tags.length ? `<div class="lb-tags">${tags.map(t => `<span class="lb-tag">${t.name}</span>`).join('')}</div>` : ''}
+      ${metaParts.length ? `<div class="lb-meta">${metaParts.join(' · ')}</div>` : ''}
+    `;
+  }
+
+  async function openLightbox(wp) {
     const img = document.getElementById('lightbox-img');
     img.onerror = null;
     img.src = wp.path || '';
@@ -754,65 +782,13 @@
       img.src = wp.thumbs?.large || wp.thumbs?.original || '';
     };
 
-    const info = document.getElementById('lightbox-info');
-    const res = wp.resolution || (wp.dimension_x && wp.dimension_y ? `${wp.dimension_x}x${wp.dimension_y}` : '');
-    const ext = (wp.file_type || '').replace('image/', '').toUpperCase();
-    const date = wp.created_at ? wp.created_at.slice(0, 10) : '';
-    const tags = Array.isArray(wp.tags) ? wp.tags : [];
-    const colors = Array.isArray(wp.colors) ? wp.colors : [];
-
-    info.innerHTML = `
-      <div>
-        <div class="lb-resolution">${res || '—'}</div>
-        <div class="lb-ratio">${wp.ratio || ''}</div>
-      </div>
-      <div class="lb-divider"></div>
-      <div>
-        <div class="lb-section-label">Details</div>
-        <div class="lb-chips">
-          ${wp.category ? `<span class="lb-chip accent">${wp.category}</span>` : ''}
-          ${wp.purity   ? `<span class="lb-chip">${wp.purity}</span>` : ''}
-          ${ext         ? `<span class="lb-chip">${ext}</span>` : ''}
-          ${wp.file_size ? `<span class="lb-chip">${fmtBytes(wp.file_size)}</span>` : ''}
-        </div>
-      </div>
-      <div>
-        <div class="lb-section-label">Stats</div>
-        <div class="lb-stats">
-          <div class="lb-stat">
-            <span class="lb-stat-value">${fmtNum(wp.views)}</span>
-            <span class="lb-stat-label">views</span>
-          </div>
-          <div class="lb-stat">
-            <span class="lb-stat-value">${fmtNum(wp.favorites)}</span>
-            <span class="lb-stat-label">favorites</span>
-          </div>
-        </div>
-      </div>
-      ${colors.length ? `
-      <div>
-        <div class="lb-section-label">Colors</div>
-        <div class="lb-colors">
-          ${colors.map(c => `<div class="lb-color-swatch" style="background:${c}" title="${c}"></div>`).join('')}
-        </div>
-      </div>` : ''}
-      ${tags.length ? `
-      <div class="lb-divider"></div>
-      <div>
-        <div class="lb-section-label">Tags</div>
-        <div class="lb-tags">
-          ${tags.map(t => `<span class="lb-tag">${t.name}</span>`).join('')}
-        </div>
-      </div>` : ''}
-      ${(wp.uploader?.username || date) ? `
-      <div class="lb-divider"></div>
-      <div>
-        ${wp.uploader?.username ? `<div class="lb-meta-row"><span>uploader</span><span>${wp.uploader.username}</span></div>` : ''}
-        ${date ? `<div class="lb-meta-row"><span>added</span><span>${date}</span></div>` : ''}
-      </div>` : ''}
-    `;
-
+    renderLightboxInfo(wp);
     document.getElementById('lightbox-modal').classList.add('visible');
+
+    try {
+      const result = await window.pywebview.api.fetch_wallpaper(wp.id, cfg.api_key || '');
+      if (result.success) renderLightboxInfo(result.data);
+    } catch (_) {}
   }
   function closeLightbox() {
     document.getElementById('lightbox-modal').classList.remove('visible');

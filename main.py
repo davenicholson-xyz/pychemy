@@ -97,6 +97,15 @@ class WallhavenAPI:
         with urllib.request.urlopen(req, timeout=15) as response:
             return json.loads(response.read().decode('utf-8'))
 
+    def fetch_wallpaper(self, wallpaper_id, api_key):
+        try:
+            data = self._fetch(f'https://wallhaven.cc/api/v1/w/{wallpaper_id}', api_key)
+            return {'success': True, 'data': data.get('data', {})}
+        except urllib.error.HTTPError as e:
+            return {'success': False, 'error': f'HTTP {e.code}: {e.reason}'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
     def get_collections(self, username, api_key):
         try:
             data = self._fetch(f'https://wallhaven.cc/api/v1/collections/{username}', api_key)
