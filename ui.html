@@ -853,6 +853,10 @@
     const lightboxOpen = document.getElementById('lightbox-modal').classList.contains('visible');
     if (lightboxOpen) {
       if (e.key === 'Escape' || e.key === 'p') closeLightbox();
+      if (e.key === 'Enter' && selectedIndex >= 0) {
+        const url = wallpapers[selectedIndex]?.path;
+        if (url) window.pywebview.api.run_script(url);
+      }
       return;
     }
 
