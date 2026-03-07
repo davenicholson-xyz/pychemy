@@ -85,41 +85,50 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Collections modal */
+  /* Collections panel — drops from top */
   #collections-modal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.45);
     z-index: 2000;
     align-items: flex-start;
     justify-content: center;
-    padding-top: 20vh;
   }
   #collections-modal.visible { display: flex; }
 
   #collections-list {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    min-width: 320px;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    width: 300px;
     max-width: 90vw;
-    overflow: hidden;
+    max-height: 60vh;
+    overflow-y: auto;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    animation: collDropDown 0.16s ease;
+  }
+
+  @keyframes collDropDown {
+    from { transform: translateY(-8px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
   }
 
   .coll-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 18px;
+    padding: 9px 14px;
     cursor: pointer;
-    gap: 24px;
+    gap: 16px;
     border-bottom: 1px solid var(--border);
+    font-size: 13px;
   }
   .coll-item:last-child { border-bottom: none; }
   .coll-item.selected { background: var(--surface2); color: var(--accent); }
   .coll-item:hover { background: var(--surface2); }
-  .coll-count { color: var(--text-muted); font-size: 12px; }
+  .coll-count { color: var(--text-muted); font-size: 11px; }
 
   /* Search modal */
   #search-modal {
