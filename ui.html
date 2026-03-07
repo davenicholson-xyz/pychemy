@@ -85,34 +85,42 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Collections panel — drops from top */
+  /* Collections modal */
   #collections-modal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
     z-index: 2000;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
+    padding-bottom: 12vh;
   }
   #collections-modal.visible { display: flex; }
+
+  #collections-wrap {
+    width: 380px;
+    max-width: 90vw;
+    animation: searchIn 0.14s ease;
+  }
 
   #collections-list {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-    width: 300px;
-    max-width: 90vw;
+    border-radius: 10px;
     max-height: 60vh;
     overflow-y: auto;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
-    animation: collDropDown 0.16s ease;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
   }
 
-  @keyframes collDropDown {
-    from { transform: translateY(-8px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
+  #collections-hint {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.4;
+    letter-spacing: 0.03em;
   }
 
   .coll-item {
@@ -413,7 +421,10 @@
 <div id="bottom-loader"><div class="spin"></div></div>
 
 <div id="collections-modal">
-  <div id="collections-list"></div>
+  <div id="collections-wrap">
+    <div id="collections-list"></div>
+    <div id="collections-hint">Enter to open &nbsp;·&nbsp; Esc to cancel</div>
+  </div>
 </div>
 
 <div id="search-modal">
