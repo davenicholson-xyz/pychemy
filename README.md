@@ -69,18 +69,18 @@ python main.py [options]
 
 | Flag | Description |
 |------|-------------|
-| `--api-key KEY` | Wallhaven API key |
-| `--username USER` | Wallhaven username |
-| `--query QUERY` | Initial search query |
-| `--categories BITS` | Category bitmask (e.g. `111`) |
-| `--purity BITS` | Purity bitmask (e.g. `100`) |
-| `--thumb-size SIZE` | Thumbnail size (`xs` `sm` `m` `l` `xl`) |
-| `--min-resolution RES` | Minimum resolution (e.g. `1920x1080`) |
-| `--script PATH` | Script to run on selection |
-| `--close-on-select` | Close window after setting wallpaper |
-| `--output` | Print wallpaper path to stdout |
-| `--hot` / `--latest` / `--top` / `--random` | Initial sort mode |
-| `--collection NAME` | Open a specific collection on launch |
+| `-k`, `--api-key KEY` | Wallhaven API key |
+| `-u`, `--username USER` | Wallhaven username |
+| `-q`, `--query QUERY` | Initial search query |
+| `-c`, `--categories BITS` | Category bitmask (e.g. `111`) |
+| `-p`, `--purity BITS` | Purity bitmask (e.g. `100`) |
+| `-t`, `--thumb-size SIZE` | Thumbnail size (`xs` `sm` `m` `l` `xl`) |
+| `-r`, `--min-resolution RES` | Minimum resolution (e.g. `1920x1080`) |
+| `-s`, `--script PATH` | Script to run on selection |
+| `-x`, `--close-on-select` | Close window after setting wallpaper |
+| `-o`, `--output` | Print wallpaper path to stdout |
+| `-H` / `-l` / `-T` / `-R` | Initial sort: Hot / Latest / Top / Random |
+| `-C`, `--collection NAME` | Open a specific collection on launch |
 
 ## Keybindings
 
