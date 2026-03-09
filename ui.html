@@ -236,6 +236,7 @@
     flex-direction: column;
     gap: 7px;
   }
+  .lb-tags { pointer-events: auto; }
 
   .lb-top-row {
     display: flex;
@@ -307,6 +308,16 @@
     font-size: 11px;
     color: rgba(255,255,255,0.48);
     backdrop-filter: blur(6px);
+    cursor: pointer;
+  }
+  .lb-tag:hover {
+    background: rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.8);
+  }
+  .lb-tag.lb-active {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    outline: 1px solid rgba(255,255,255,0.5);
   }
   .lb-meta {
     font-size: 11px;
@@ -331,7 +342,7 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px 22px 16px;
-    min-width: 420px;
+    min-width: 560px;
     max-width: 90vw;
   }
 
@@ -346,7 +357,7 @@
 
   .help-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px 24px;
   }
 
@@ -473,6 +484,13 @@
         <div class="help-row"><span class="help-keys"><kbd>o</kbd></span>Open in browser</div>
         <div class="help-row"><span class="help-keys"><kbd>Esc</kbd></span>Quit</div>
       </div>
+      <div>
+        <div class="help-section-label">Preview</div>
+        <div class="help-row"><span class="help-keys"><kbd>←</kbd><kbd>h</kbd></span>Prev tag</div>
+        <div class="help-row"><span class="help-keys"><kbd>→</kbd><kbd>l</kbd></span>Next tag</div>
+        <div class="help-row"><span class="help-keys"><kbd>Enter</kbd></span>Search tag</div>
+        <div class="help-row"><span class="help-keys"><kbd>p</kbd><kbd>Esc</kbd></span>Close</div>
+      </div>
     </div>
     <div class="help-footer">Press <kbd>?</kbd> or <kbd>Esc</kbd> to close</div>
   </div>
@@ -490,6 +508,7 @@
   let currentSorting = 'date_added';
   let currentSeed = '';
   let currentQuery = '';
+  let lbTagIndex = -1;
   let collectionMode = false;
   let currentCollection = null;
   let collectionsData = [];
@@ -716,6 +735,21 @@
     document.getElementById('search-modal').classList.remove('visible');
   }
 
+  function searchTag(name) {
+    closeLightbox();
+    currentQuery = name;
+    collectionMode = false;
+    currentCollection = null;
+    currentSorting = 'relevance';
+    currentSeed = '';
+    currentPage = 0;
+    lastPage = 1;
+    wallpapers = [];
+    updateStatus();
+    showSkeletons();
+    loadNextPage();
+  }
+
   document.getElementById('search-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const q = e.target.value.trim();
@@ -824,9 +858,12 @@
         </div>
       </div>
       ${(chips || swatches) ? `<div class="lb-chips-row">${chips}${swatches}</div>` : ''}
-      ${tags.length ? `<div class="lb-tags">${tags.map(t => `<span class="lb-tag">${t.name}</span>`).join('')}</div>` : ''}
+      ${tags.length ? `<div class="lb-tags">${tags.map(t => `<span class="lb-tag" data-tag="${t.name.replace(/"/g, '&quot;')}">${t.name}</span>`).join('')}</div>` : ''}
       ${metaParts.length ? `<div class="lb-meta">${metaParts.join(' · ')}</div>` : ''}
     `;
+    document.querySelectorAll('#lightbox-info .lb-tag').forEach(el => {
+      el.addEventListener('click', e => { e.stopPropagation(); searchTag(el.dataset.tag); });
+    });
   }
 
   async function openLightbox(wp) {
@@ -847,9 +884,16 @@
       if (result.success) renderLightboxInfo(result.data);
     } catch (_) {}
   }
+  function setLbTag(i) {
+    const els = document.querySelectorAll('#lightbox-info .lb-tag');
+    els.forEach((el, idx) => el.classList.toggle('lb-active', idx === i));
+    lbTagIndex = i;
+  }
+
   function closeLightbox() {
     document.getElementById('lightbox-modal').classList.remove('visible');
     document.getElementById('lightbox-img').src = '';
+    lbTagIndex = -1;
   }
   document.getElementById('lightbox-image-area').addEventListener('click', closeLightbox);
 
@@ -863,10 +907,26 @@
   document.addEventListener('keydown', e => {
     const lightboxOpen = document.getElementById('lightbox-modal').classList.contains('visible');
     if (lightboxOpen) {
-      if (e.key === 'Escape' || e.key === 'p') closeLightbox();
-      if (e.key === 'Enter' && selectedIndex >= 0) {
-        const url = wallpapers[selectedIndex]?.path;
-        if (url) window.pywebview.api.run_script(url);
+      if (e.key === 'Escape' || e.key === 'p') { closeLightbox(); return; }
+      const lbTags = document.querySelectorAll('#lightbox-info .lb-tag');
+      if (e.key === 'ArrowRight' || e.key === 'l') {
+        e.preventDefault();
+        setLbTag(Math.min(lbTagIndex + 1, lbTags.length - 1));
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'h') {
+        e.preventDefault();
+        setLbTag(Math.max(lbTagIndex - 1, lbTags.length ? 0 : -1));
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (lbTagIndex >= 0 && lbTags[lbTagIndex]) {
+          searchTag(lbTags[lbTagIndex].dataset.tag);
+        } else if (selectedIndex >= 0) {
+          const url = wallpapers[selectedIndex]?.path;
+          if (url) window.pywebview.api.run_script(url);
+        }
+        return;
       }
       return;
     }
