@@ -64,12 +64,10 @@ class WallhavenAPI:
         webview.windows[0].destroy()
 
     def run_script(self, url):
-        script = self.config.get('script', '')
-        if not script:
-            return
-        threading.Thread(target=self._download_and_run, args=(script, url), daemon=True).start()
+        threading.Thread(target=self._download_and_run, args=(url,), daemon=True).start()
 
-    def _download_and_run(self, script, url):
+    def _download_and_run(self, url):
+        script = self.config.get('script', '')
         parsed = urllib.parse.urlparse(url)
         filename = Path(parsed.path).name or 'wallpaper.jpg'
         cache_dir = Path.home() / '.cache' / 'pyvista'
@@ -81,13 +79,48 @@ class WallhavenAPI:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 with open(dest, 'wb') as f:
                     shutil.copyfileobj(resp, f)
-            subprocess.run([script, str(dest)])
+            if script:
+                subprocess.run([script, str(dest)])
+            else:
+                self._set_wallpaper_builtin(dest)
             if self.config.get('output'):
                 print(str(dest), flush=True)
             if self.config.get('close-on-select'):
                 webview.windows[0].destroy()
         except Exception:
             pass
+
+    def _set_wallpaper_builtin(self, filepath):
+        path = str(filepath)
+        desktop = os.environ.get('DESKTOP_SESSION', '').lower()
+        if not desktop:
+            desktop = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+
+        if desktop in ('plasma', 'kde-plasma'):
+            script = (
+                'var allDesktops = desktops();'
+                'for (var i=0; i<allDesktops.length; i++) {'
+                '  allDesktops[i].wallpaperPlugin = "org.kde.image";'
+                '  allDesktops[i].currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];'
+                f'  allDesktops[i].writeConfig("Image", "file://{path}");'
+                '}'
+            )
+            cmd = (
+                f'dbus-send --session --dest=org.kde.plasmashell --type=method_call '
+                f'/PlasmaShell org.kde.PlasmaShell.evaluateScript string:"{script}"'
+            )
+            subprocess.run(cmd, shell=True)
+        elif desktop in ('gnome', 'gnome-wayland', 'ubuntu', 'budgie-desktop'):
+            uri = f'file://{path}'
+            subprocess.run(['gsettings', 'set', 'org.gnome.desktop.background', 'picture-uri', uri])
+            subprocess.run(['gsettings', 'set', 'org.gnome.desktop.background', 'picture-uri-dark', uri])
+        elif desktop == 'cinnamon':
+            subprocess.run(['gsettings', 'set', 'org.cinnamon.desktop.background', 'picture-uri', f'file://{path}'])
+        elif desktop == 'mate':
+            subprocess.run(['gsettings', 'set', 'org.mate.background', 'picture-filename', path])
+        elif desktop == 'xfce':
+            cmd = f"for prop in $(xfconf-query -c xfce4-desktop -l | grep last-image); do xfconf-query -c xfce4-desktop -p $prop -s '{path}'; done"
+            subprocess.run(cmd, shell=True)
 
     def _fetch(self, url, api_key):
         req = urllib.request.Request(url)

@@ -11,6 +11,7 @@ A fast, keyboard-friendly desktop wallpaper browser for [Wallhaven](https://wall
 - **Collections** support — browse your saved Wallhaven collections
 - **Lightbox preview** with resolution, file size, tags, colors, and uploader info
 - Infinite scroll with lazy-loaded thumbnails
+- **Built-in wallpaper setting** for GNOME, KDE Plasma, Cinnamon, MATE, and XFCE — no script needed
 - Run a custom script to set wallpapers (integrates with any wallpaper setter)
 - Vim-style keyboard navigation (`hjkl`)
 - Dark theme with minimal UI chrome
@@ -54,12 +55,14 @@ query      = ""                          # Default search query
 categories = "111"                       # General, Anime, People (bitmask)
 purity     = "100"                       # SFW/Sketchy/NSFW (bitmask)
 thumb-size = "m"                         # xs | sm | m | l | xl
-script     = "/path/to/set-wallpaper.sh" # Script to run on selection
+script     = "/path/to/set-wallpaper.sh" # Optional: custom script (overrides built-in)
 close-on-select = false
 output     = false                       # Print filepath to stdout on selection
 ```
 
-The selected wallpaper's local cache path is passed as the first argument to your script.
+When no script is configured, pyvista automatically sets the wallpaper using a built-in command for the detected desktop environment (`DESKTOP_SESSION` / `XDG_CURRENT_DESKTOP`). Supported: GNOME, KDE Plasma, Cinnamon, MATE, XFCE.
+
+When a script is configured, the selected wallpaper's local cache path is passed as the first argument.
 
 ## Usage
 
@@ -76,7 +79,7 @@ python main.py [options]
 | `-p`, `--purity BITS` | Purity bitmask (e.g. `100`) |
 | `-t`, `--thumb-size SIZE` | Thumbnail size (`xs` `sm` `m` `l` `xl`) |
 | `-r`, `--min-resolution RES` | Minimum resolution (e.g. `1920x1080`) |
-| `-s`, `--script PATH` | Script to run on selection |
+| `-s`, `--script PATH` | Custom script to run on selection (overrides built-in) |
 | `-x`, `--close-on-select` | Close window after setting wallpaper |
 | `-o`, `--output` | Print wallpaper path to stdout |
 | `-H` / `-l` / `-T` / `-R` | Initial sort: Hot / Latest / Top / Random |
@@ -87,7 +90,7 @@ python main.py [options]
 | Key | Action |
 |-----|--------|
 | `h j k l` / arrows | Navigate gallery |
-| `Enter` | Run script on selected wallpaper |
+| `Enter` | Set selected wallpaper |
 | `P` | Preview (lightbox) |
 | `O` | Open in browser |
 | `S` / `/` | Search |

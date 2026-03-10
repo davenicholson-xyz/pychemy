@@ -482,7 +482,7 @@
         <div class="help-row"><span class="help-keys"><kbd>Enter</kbd></span>Run script</div>
         <div class="help-row"><span class="help-keys"><kbd>p</kbd></span>Preview (lightbox)</div>
         <div class="help-row"><span class="help-keys"><kbd>o</kbd></span>Open in browser</div>
-        <div class="help-row"><span class="help-keys"><kbd>Esc</kbd></span>Quit</div>
+        <div class="help-row"><span class="help-keys"><kbd>q</kbd><kbd>Esc</kbd></span>Quit</div>
       </div>
       <div>
         <div class="help-section-label">Preview</div>
@@ -992,7 +992,7 @@
       e.preventDefault();
       const id = wallpapers[selectedIndex]?.id;
       if (id) window.pywebview.api.open_browser(`https://wallhaven.cc/w/${id}`);
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' || e.key === 'q') {
       window.pywebview.api.close();
     }
   });
